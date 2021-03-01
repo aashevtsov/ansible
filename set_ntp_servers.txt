@@ -1,0 +1,43 @@
+---
+  - name: CISCO NTP
+    hosts: "tmp"
+    gather_facts: false
+    connection: network_cli
+    remote_user: aashevtsov
+    become: yes
+    become_method: enable
+                
+    vars:
+      ansible_network_os: ios
+    
+    tasks:
+      - name: SET NTP servers
+        ios_command:
+          commands:
+            - conf t
+            - ntp server ipadd
+            - end
+    
+      - name: set TimeZone
+        ios_command:
+          commands:
+            - conf t
+            - clock timezone {{ timezone }}
+            - end
+        register: TIMEZONE_set
+
+      - name: write setting
+        ios_command:
+          commands:
+            - write
+
+      - name: Show clock INFO
+        ios_command:
+          commands:
+            - show clock detail
+        register: CLOCK_show
+
+      - name: OUTPUT SWITCH
+        debug:
+          msg:
+            - "{{ inventory_hostname }}, {{ CLOCK_show.stdout_lines[0] }}"
