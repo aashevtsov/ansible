@@ -1,0 +1,48 @@
+---
+
+- name: BACKUP RUNNING CONFIG
+
+  hosts: all
+  connection: local
+  gather_facts: False
+
+  vars:
+
+    backup_path: /home/shevtsov/ansible/backups
+
+ 
+
+  tasks:
+
+    - name: Facts
+      ios_facts:
+ 
+
+    - name: SHOW RUNNING
+     ios_command:
+        commands: show running
+      register: config
+
+
+    - name: ensure backup folder is created
+      file:
+        path: "{{ backup_path }}"
+        state: directory
+      run_once: yes
+ 
+
+    - name: create directory hierarchy
+      file:
+        path: "{{ backup_path }}/{{ ansible_net_hostname }}"
+        state: directory
+ 
+
+    - name: timestamp
+      command: date +%d.%m.%Y_%H:%M:%S
+      register: timestamp
+
+   
+    - name: create backup
+      copy:
+        content: "{{ config.stdout[0] }}"
+        dest: "{{ backup_path }}/{{ ansible_net_hostname }}/{{ ansible_net_hostname }}_{{ timestamp.stdout }}.txt"
